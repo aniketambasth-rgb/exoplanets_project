@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 
-os.chdir(r"c:\Work\Python Project")
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # Load the already merged file — no need to merge again!
 merged = pd.read_csv("unique_exoplanets.csv", low_memory=False)
