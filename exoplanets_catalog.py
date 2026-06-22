@@ -46,6 +46,7 @@ nasa_select = nasa[[
     "pl_orbeccen", "hostname", "st_mass", "st_rad",
     "st_teff", "sy_dist", "ra", "dec",
     "disc_year", "discoverymethod", "pl_eqt"
+    kepler_only = merged[merged["disc_facility"] == "Kepler"]
 ]].rename(columns={
     "pl_rade"        : "radius",
     "pl_bmasse"      : "mass",
