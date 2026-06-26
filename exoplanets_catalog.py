@@ -3,7 +3,7 @@ import os
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 
-os.chdir(r"c:\Work\Python Project")
+os.chdir(r"/home/aniket/exoplanets_project")
 
 # Step 1 - Load both catalogs
 nasa = pd.read_csv("nasa_exoplanets.csv", comment='#', low_memory=False)
@@ -45,8 +45,8 @@ nasa_select = nasa[[
     "pl_name", "pl_rade", "pl_bmasse", "pl_orbper",
     "pl_orbeccen", "hostname", "st_mass", "st_rad",
     "st_teff", "sy_dist", "ra", "dec",
-    "disc_year", "discoverymethod", "pl_eqt"
-    kepler_only = merged[merged["disc_facility"] == "Kepler"]
+    "disc_year", "discoverymethod", "pl_eqt", "st_spectype"
+    
 ]].rename(columns={
     "pl_rade"        : "radius",
     "pl_bmasse"      : "mass",
@@ -59,7 +59,8 @@ nasa_select = nasa[[
     "sy_dist"        : "star_distance",
     "disc_year"      : "discovered",
     "discoverymethod": "detection_type",
-    "pl_eqt"         : "eq_temperature"
+    "pl_eqt"         : "eq_temperature",
+    "st_spectype"    : "star_spectype"
 })
 
 # Step 8 - Select ESA truly unique columns

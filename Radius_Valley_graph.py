@@ -6,7 +6,7 @@ import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # Load the unified catalog
-merged = pd.read_csv("esa_catalog.csv", low_memory=False)
+merged = pd.read_csv("exoplanets_G_type.csv", low_memory=False)
 
 # Graph 1 - Planet Size Distribution with Planet Types and Radius Valley
 bins_size = np.arange(0.5, 12.1, 0.1)
