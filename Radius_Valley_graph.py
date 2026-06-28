@@ -6,7 +6,7 @@ import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # Load the unified catalog
-merged = pd.read_csv("short_period_exoplanets_G.csv", low_memory=False)
+merged = pd.read_csv("exoplanets_G_type.csv", low_memory=False)
 
 # Graph 1 - Planet Size Distribution with Planet Types and Radius Valley
 bins_size = np.arange(0.5, 12.1, 0.1)
@@ -38,7 +38,7 @@ plt.text(2.10, 155, "Sub-Neptune", fontsize=8, color="red",    rotation=90)
 plt.text(5.00, 155, "Neptune-like",fontsize=8, color="purple", rotation=90)
 plt.text(10.2, 155, "Gas Giant",   fontsize=8, color="brown",  rotation=90)
 
-plt.title("Distribution of Planet Sizes by Type (with Radius Valley)")
+plt.title("Distribution of Planets with size (G-type, P<100 days;Radius Valley)")
 plt.xlabel("Planet Radius (Earth radii)")
 plt.ylabel("Number of Planets")
 plt.xlim(0.5, 12)
