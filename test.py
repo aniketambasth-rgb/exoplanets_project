@@ -1,69 +1,100 @@
 import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
 import os
+from astropy.coordinates import SkyCoord
+import astropy.units as u
 
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
+os.chdir(r"/home/aniket/exoplanets_project")
 
-# Load the catalog
-merged = pd.read_csv("short_period_exoplanets_G.csv", low_memory=False)
+# Step 1 - Load both catalogs
+nasa = pd.read_csv("nasa_exoplanets.csv", comment='#', low_memory=False)
+esa  = pd.read_csv("esa_exoplanets.csv")
 
-# Focus on 0.5–6 R⊕
-data = merged["radius"].dropna()
-data = data[(data >= 0.5) & (data <= 6.0)]
+# Step 2 - Rename ESA 'name' to 'pl_name'
+esa = esa.rename(columns={"name": "pl_name"})
 
-# Log-spaced bins since x-axis is logarithmic
-bins_size = np.logspace(np.log10(0.5), np.log10(6.0), 60)
+# Step 3 - Deduplicate NASA
+nasa = nasa.drop_duplicates(subset="pl_name")
+print("NASA after dedup:", len(nasa))
 
-fig, ax = plt.subplots(figsize=(14, 6))
+# Step 4 - Normalize names
+nasa = nasa.copy()
+nasa["pl_name_norm"] = nasa["pl_name"].str.strip().str.lower().str.replace(" ", "")
+esa["pl_name_norm"]  = esa["pl_name"].str.strip().str.lower().str.replace(" ", "")
 
-ax.hist(data, bins=bins_size, color="steelblue", edgecolor="white", linewidth=0.4)
+# Step 5 - Name matching: find ESA planets not in NASA by name
+esa_not_by_name = esa[~esa["pl_name_norm"].isin(nasa["pl_name_norm"])]
+print("ESA not matched by name:  ", len(esa_not_by_name))
 
-# ── Shaded planet type regions ───────────────────────────────────────────────
-ax.axvspan(0.5,  1.25, alpha=0.15, color="green",  label="Earth-size")
-ax.axvspan(1.25, 2.0,  alpha=0.15, color="orange", label="Super-Earth")
-ax.axvspan(2.0,  4.0,  alpha=0.15, color="red",    label="Sub-Neptune")
-ax.axvspan(4.0,  6.0,  alpha=0.15, color="purple", label="Neptune-like")
+# Step 6 - Coordinate matching on remaining ESA planets
+nasa_clean = nasa.dropna(subset=["ra", "dec"])
+esa_not_by_name = esa_not_by_name.dropna(subset=["ra", "dec"])
 
-# ── Planet type boundary lines ───────────────────────────────────────────────
-ax.axvline(x=1.25, color="green",  linestyle="--", linewidth=1.5)
-ax.axvline(x=4.0,  color="red",    linestyle="--", linewidth=1.5)
+nasa_coords = SkyCoord(ra=nasa_clean["ra"].values * u.degree,
+                       dec=nasa_clean["dec"].values * u.degree)
+esa_coords  = SkyCoord(ra=esa_not_by_name["ra"].values * u.degree,
+                       dec=esa_not_by_name["dec"].values * u.degree)
 
-# ── Fulton Gap highlighted on top ────────────────────────────────────────────
-ax.axvspan(1.5, 2.0, alpha=0.45, color="gray", label="Radius Valley (Fulton Gap)")
-ax.axvline(x=1.5, color="black", linestyle="-", linewidth=2)
-ax.axvline(x=2.0, color="black", linestyle="-", linewidth=2)
+idx, sep, _ = esa_coords.match_to_catalog_sky(nasa_coords)
+coord_mask  = sep < 20 * u.arcsec
 
-# ── Log x-axis ───────────────────────────────────────────────────────────────
-ax.set_xscale("log")
+esa_truly_unique = esa_not_by_name[~coord_mask]
+print("ESA truly unique planets: ", len(esa_truly_unique))
 
-# ── Custom x-axis ticks at meaningful radius values ──────────────────────────
-tick_vals = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0, 4.0, 6.0]
-ax.set_xticks(tick_vals)
-ax.set_xticklabels([str(t) for t in tick_vals])
+# Step 7 - Select and rename NASA columns
+nasa_select = nasa[[
+    "pl_name", "pl_rade", "pl_bmasse", "pl_orbper",
+    "pl_orbeccen", "hostname", "st_mass", "st_rad",
+    "st_teff", "sy_dist", "ra", "dec",
+    "disc_year", "discoverymethod", "pl_eqt", "st_spectype", "st_met", "sy_gaiamag"
+    
+]].rename(columns={
+    "pl_rade"        : "radius",
+    "pl_bmasse"      : "mass",
+    "pl_orbper"      : "orbital_period",
+    "pl_orbeccen"    : "eccentricity",
+    "hostname"       : "star_name",
+    "st_mass"        : "star_mass",
+    "st_rad"         : "star_radius",
+    "st_teff"        : "star_teff",
+    "sy_dist"        : "star_distance",
+    "disc_year"      : "discovered",
+    "discoverymethod": "detection_type",
+    "pl_eqt"         : "eq_temperature",
+    "st_spectype"    : "star_spectype",
+    "st_met"         : "star_metallicity",
+    "sy_gaiamag"     : "star_gaia_magnitude"
+})
 
-# ── Planet type labels ────────────────────────────────────────────────────────
-y_label = ax.get_ylim()[1] * 0.85
-ax.text(0.58,  y_label, "Earth",        fontsize=9, color="green",  rotation=90, va="top")
-ax.text(1.30,  y_label, "Super-Earth",  fontsize=9, color="orange", rotation=90, va="top")
-ax.text(2.10,  y_label, "Sub-Neptune",  fontsize=9, color="red",    rotation=90, va="top")
-ax.text(4.10,  y_label, "Neptune-like", fontsize=9, color="purple", rotation=90, va="top")
+# Step 8 - Select ESA truly unique columns
+esa_select = esa_truly_unique[[
+    "pl_name", "radius", "mass", "orbital_period",
+    "eccentricity", "star_name", "star_mass", "star_radius",
+    "star_teff", "star_distance", "ra", "dec",
+    "discovered", "detection_type", "star_metallicity"
+]].rename(columns={
+    # no renames needed, ESA already uses the right names
+})
 
-# ── Fulton Gap arrow annotation ───────────────────────────────────────────────
-ax.annotate(
-    "Fulton Gap\n(1.5–2.0 R⊕)",
-    xy=(1.75, 2.5),
-    xytext=(2.3, ax.get_ylim()[1] * 0.6),
-    fontsize=10, color="black", fontweight="bold",
-    arrowprops=dict(arrowstyle="->", color="black", lw=1.5)
-)
+esa_select = esa_select.copy()
+esa_select["eq_temperature"]      = None   # ESA doesn't have this
+esa_select["star_gaia_magnitude"] = None   # ESA doesn't have Gaia mag
+esa_select["star_spectype"]       = esa_truly_unique["star_sp_type"].values  # different column name in ESA
 
-ax.set_title("Distribution of Planet Sizes by Type — Log x-axis\n"
-             "(G-type stars, Orbital Period < 100 days)", fontsize=13)
-ax.set_xlabel("Planet Radius (Earth radii) — log scale", fontsize=12)
-ax.set_ylabel("Number of Planets", fontsize=12)
-ax.set_xlim(0.5, 6.0)
-ax.legend(loc="upper right", fontsize=9)
-plt.tight_layout()
-plt.savefig("fulton_gap_logx.png", dpi=150, bbox_inches="tight")
-plt.show()
+# Step 9 - Combine and save
+final = pd.concat([nasa_select, esa_select], ignore_index=True)
+final["pl_name"] = final["pl_name"].str.strip().str.lower()
+final_unique = final.drop_duplicates(subset="pl_name")
+
+print("Final unique planets:", len(final_unique))
+
+final_unique.to_csv("unified_exoplanets2.csv", index=False)
+print("Saved!")
+
+
+
+
+
+
+
+
+

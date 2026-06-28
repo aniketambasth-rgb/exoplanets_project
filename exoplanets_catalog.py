@@ -45,7 +45,7 @@ nasa_select = nasa[[
     "pl_name", "pl_rade", "pl_bmasse", "pl_orbper",
     "pl_orbeccen", "hostname", "st_mass", "st_rad",
     "st_teff", "sy_dist", "ra", "dec",
-    "disc_year", "discoverymethod", "pl_eqt", "st_spectype"
+    "disc_year", "discoverymethod", "pl_eqt", "st_spectype", "st_met", "sy_gaiamag"
     
 ]].rename(columns={
     "pl_rade"        : "radius",
@@ -60,8 +60,12 @@ nasa_select = nasa[[
     "disc_year"      : "discovered",
     "discoverymethod": "detection_type",
     "pl_eqt"         : "eq_temperature",
-    "st_spectype"    : "star_spectype"
+    "st_spectype"    : "star_spectype",
+    "st_met"         : "star_metallicity",
+    "sy_gaiamag"     : "star_gaia_magnitude"
 })
+
+print(esa.columns.tolist())
 
 # Step 8 - Select ESA truly unique columns
 # ESA doesn't have eq_temperature so fill with NaN
@@ -69,7 +73,7 @@ esa_select = esa_truly_unique[[
     "pl_name", "radius", "mass", "orbital_period",
     "eccentricity", "star_name", "star_mass", "star_radius",
     "star_teff", "star_distance", "ra", "dec",
-    "discovered", "detection_type"
+    "discovered", "detection_type", "star_metallicity", "star_gaia_magnitude"
 ]]
 esa_select = esa_select.copy()
 esa_select["eq_temperature"] = None   # ESA doesn't have this column
