@@ -15,8 +15,8 @@ data = data[(data["mass"] > 0) & (data["radius"] > 0)]
 
 # Define 3 regions by mass
 region1 = data[(data["mass"] >= 0.01) & (data["mass"] < 10)]
-region2 = data[(data["mass"] >= 10)   & (data["mass"] < 50)]
-region3 = data[(data["mass"] >= 50)  & (data["mass"] <= 20000)]
+region2 = data[(data["mass"] >= 10)   & (data["mass"] < 100)]
+region3 = data[(data["mass"] >= 100)  & (data["mass"] <= 20000)]
 
 # Fit a line in log space for each region
 def fit_line(region):
@@ -40,8 +40,8 @@ plt.scatter(data["mass"], data["radius"],
 
 # Plot fitted lines for each region
 m1 = np.logspace(np.log10(0.01), np.log10(10),    100)
-m2 = np.logspace(np.log10(10),   np.log10(50),   100)
-m3 = np.logspace(np.log10(50),  np.log10(20000), 100)
+m2 = np.logspace(np.log10(10),   np.log10(100),  100)
+m3 = np.logspace(np.log10(100), np.log10(20000), 100)
 
 plt.plot(m1, 10**(slope1 * np.log10(m1) + intercept1),
          color="green",  linewidth=2, label=f"Rocky slope={slope1:.2f}")
